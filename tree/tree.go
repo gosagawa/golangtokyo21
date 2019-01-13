@@ -25,7 +25,10 @@ const (
 
 //Tree treeコマンド
 type Tree struct {
-	Deps int //取得する深さ
+	Deps       int    //取得する深さ
+	DirAmount  int    //ディレクトリ数
+	FileAmount int    //ファイル数
+	Result     string //実行結果文字列
 }
 
 //NewTree treeコマンド作成
@@ -45,13 +48,14 @@ func NewTree(deps int) (*Tree, error) {
 //OutputTree tree実行
 func (t *Tree) OutputTree(dir string, out io.Writer) error {
 
-	result := fmt.Sprintf("%v\n", dir)
-	err := t.searchDir(dir, "", &result, 0)
+	t.Result += fmt.Sprintf("%v\n", dir)
+	err := t.searchDir(dir, "", 0)
 	if err != nil {
 		return err
 	}
+	t.Result += fmt.Sprintf("\n%v\n", t.getFileCountString())
 
-	_, err = out.Write([]byte(result))
+	_, err = out.Write([]byte(t.Result))
 	if err != nil {
 		return err
 	}
@@ -59,7 +63,7 @@ func (t *Tree) OutputTree(dir string, out io.Writer) error {
 	return nil
 }
 
-func (t *Tree) searchDir(dir string, base string, result *string, deps int) error {
+func (t *Tree) searchDir(dir string, base string, deps int) error {
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
 		return fmt.Errorf("cannot read %v : %v", dir, err)
@@ -81,14 +85,19 @@ func (t *Tree) searchDir(dir string, base string, result *string, deps int) erro
 			relationLineParent = RelationLineT
 			relationLineChild = RelationLineI
 		}
-		*result += fmt.Sprintf("%v%v%v\n", base, relationLineParent, file.Name())
+		t.Result += fmt.Sprintf("%v%v%v\n", base, relationLineParent, file.Name())
 		if file.IsDir() {
+			t.DirAmount++
+
 			nextDir := fmt.Sprintf("%v/%v", dir, file.Name())
 			nextBase := fmt.Sprintf("%v%v", base, relationLineChild)
-			err = t.searchDir(nextDir, nextBase, result, deps)
+
+			err = t.searchDir(nextDir, nextBase, deps)
 			if err != nil {
 				return err
 			}
+		} else {
+			t.FileAmount++
 		}
 	}
 	return nil
@@ -110,4 +119,17 @@ func (t *Tree) isOverDeps(deps int) bool {
 		return false
 	}
 	return true
+}
+
+func (t *Tree) getFileCountString() string {
+
+	dirUnit := "directory"
+	if t.DirAmount > 1 {
+		dirUnit = "directories"
+	}
+	fileUnit := "file"
+	if t.FileAmount > 1 {
+		fileUnit = "files"
+	}
+	return fmt.Sprintf("%v %v, %v %v", t.DirAmount, dirUnit, t.FileAmount, fileUnit)
 }

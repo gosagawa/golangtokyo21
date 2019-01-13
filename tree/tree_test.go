@@ -18,6 +18,7 @@ func (u *unwritable) Write(p []byte) (n int, err error) {
 
 const testdataDirCase1 = "testdata/case1"
 const testdataDirCase2 = "testdata/case2"
+const testdataDirCase2Unreadable = "testdata/case2/dir1/dir11"
 
 func TestIsValidInput(t *testing.T) {
 
@@ -53,11 +54,15 @@ func TestIsValidInput(t *testing.T) {
 │       ├── file4
 │       └── file5
 └── file1
+
+3 directories, 5 files
 `
 	outputdeps1 := testdataDirCase1
 	outputdeps1 += `
 ├── dir1
 └── file1
+
+1 directory, 1 file
 `
 
 	outputdeps2 := testdataDirCase1
@@ -66,11 +71,19 @@ func TestIsValidInput(t *testing.T) {
 │   ├── dir11
 │   └── dir12
 └── file1
+
+3 directories, 1 file
 `
 
-	if err := os.Chmod(testdataDirCase2, 0700); err != nil {
+	//ディレクトリ読み込みエラー検証用にパーミッション操作
+	if err := os.Chmod(testdataDirCase2Unreadable, 0000); err != nil {
 		fmt.Println(err)
 	}
+	defer func() {
+		if err := os.Chmod(testdataDirCase2Unreadable, 0755); err != nil {
+			fmt.Println(err)
+		}
+	}()
 
 	cases := []struct {
 		name      string
@@ -152,7 +165,4 @@ func TestIsValidInput(t *testing.T) {
 		})
 	}
 
-	if err := os.Chmod(testdataDirCase2, 0755); err != nil {
-		fmt.Println(err)
-	}
 }
