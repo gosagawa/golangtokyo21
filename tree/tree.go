@@ -43,7 +43,7 @@ func OutputTree(dir string, out io.Writer) error {
 func searchDir(dir string, base string, result *string) error {
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
-		return fmt.Errorf("cannnot read %v : %v", dir, err)
+		return fmt.Errorf("cannot read %v : %v", dir, err)
 	}
 	lastIndex := len(files) - 1
 	for i, file := range files {
