@@ -11,8 +11,9 @@ import (
 func main() {
 
 	var (
-		deps    = flag.Int("L", 0, "階層の深さ")
-		dirOnly = flag.Bool("D", false, "ディレクトリのみ表示")
+		deps       = flag.Int("L", 0, "階層の深さ")
+		dirOnly    = flag.Bool("D", false, "ディレクトリのみ表示")
+		maskGopher = flag.Bool("G", false, "ファイル名をGopherでマスク")
 	)
 
 	flag.Usage = usage
@@ -26,8 +27,9 @@ func main() {
 
 	dir := args[0]
 	option := tree.Option{
-		Deps:    *deps,
-		DirOnly: *dirOnly,
+		Deps:       *deps,
+		DirOnly:    *dirOnly,
+		MaskGopher: *maskGopher,
 	}
 	tree, err := tree.NewTree(option)
 	if err != nil {
@@ -50,6 +52,8 @@ Usage: tree: tree [OPTION] dir_pass
         階層の深さ。0(デフォルト)で無制限
     -D 
         ディレクトリのみ表示
+    -G 
+        ファイル名をGopherでマスク
 `
 	_, err := fmt.Fprintf(os.Stderr, usage)
 	if err != nil {

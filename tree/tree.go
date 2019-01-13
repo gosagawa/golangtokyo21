@@ -24,6 +24,9 @@ const (
 	RelationLineEmpty RelationLine = "    "
 )
 
+//GopherString Gopherの顔文字
+const GopherString = "ʕ◔ϖ◔ʔ"
+
 //Tree treeコマンド
 type Tree struct {
 	Option     Option //オプション
@@ -34,8 +37,9 @@ type Tree struct {
 
 //Option treeコマンドオプション
 type Option struct {
-	Deps    int  //取得する深さ
-	DirOnly bool //ディレクトリのみ表示A
+	Deps       int  //取得する深さ
+	DirOnly    bool //ディレクトリのみ表示
+	MaskGopher bool //Gopherでマスクするか？
 }
 
 //NewTree treeコマンド作成
@@ -85,7 +89,7 @@ func (t *Tree) searchDir(dir string, base string, deps int) error {
 
 		lineParent, lineChild := t.getRelationLine(i, files)
 		if file.IsDir() {
-			t.Result += fmt.Sprintf("%v%v%v\n", base, lineParent, file.Name())
+			t.Result += fmt.Sprintf("%v%v%v\n", base, lineParent, t.getFileName(file.Name()))
 			t.DirAmount++
 
 			nextDir := fmt.Sprintf("%v/%v", dir, file.Name())
@@ -97,7 +101,7 @@ func (t *Tree) searchDir(dir string, base string, deps int) error {
 			}
 		} else if t.Option.DirOnly == false {
 
-			t.Result += fmt.Sprintf("%v%v%v\n", base, lineParent, file.Name())
+			t.Result += fmt.Sprintf("%v%v%v\n", base, lineParent, t.getFileName(file.Name()))
 			t.FileAmount++
 		}
 	}
@@ -158,4 +162,11 @@ func (t *Tree) getFileCountString() string {
 		result = fmt.Sprintf("%v %v, %v %v", t.DirAmount, dirUnit, t.FileAmount, fileUnit)
 	}
 	return result
+}
+func (t *Tree) getFileName(name string) string {
+
+	if t.Option.MaskGopher {
+		name = GopherString
+	}
+	return name
 }

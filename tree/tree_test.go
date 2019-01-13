@@ -83,6 +83,20 @@ func TestIsValidInput(t *testing.T) {
 3 directories
 `
 
+	outputgopher := testdataDirCase1
+	outputgopher += `
+├── ʕ◔ϖ◔ʔ
+│   ├── ʕ◔ϖ◔ʔ
+│   │   ├── ʕ◔ϖ◔ʔ
+│   │   └── ʕ◔ϖ◔ʔ
+│   └── ʕ◔ϖ◔ʔ
+│       ├── ʕ◔ϖ◔ʔ
+│       └── ʕ◔ϖ◔ʔ
+└── ʕ◔ϖ◔ʔ
+
+3 directories, 5 files
+`
+
 	//ディレクトリ読み込みエラー検証用にパーミッション操作
 	if err := os.Chmod(testdataDirCase2Unreadable, 0000); err != nil {
 		fmt.Println(err)
@@ -94,13 +108,14 @@ func TestIsValidInput(t *testing.T) {
 	}()
 
 	cases := []struct {
-		name      string
-		dir       string
-		output    string
-		deps      int
-		dirOnly   bool
-		outStream interface{}
-		assertFn  AssertFn
+		name       string
+		dir        string
+		output     string
+		deps       int
+		dirOnly    bool
+		maskGopher bool
+		outStream  interface{}
+		assertFn   AssertFn
 	}{
 		{
 			name:      "default",
@@ -134,6 +149,14 @@ func TestIsValidInput(t *testing.T) {
 			assertFn:  noError,
 		},
 		{
+			name:       "maskGopher",
+			dir:        testdataDirCase1,
+			output:     outputgopher,
+			maskGopher: true,
+			outStream:  new(bytes.Buffer),
+			assertFn:   noError,
+		},
+		{
 			name:      "deps error",
 			dir:       testdataDirCase1,
 			deps:      -1,
@@ -164,8 +187,9 @@ func TestIsValidInput(t *testing.T) {
 		t.Run(v.name, func(t *testing.T) {
 
 			option := Option{
-				Deps:    v.deps,
-				DirOnly: v.dirOnly,
+				Deps:       v.deps,
+				DirOnly:    v.dirOnly,
+				MaskGopher: v.maskGopher,
 			}
 
 			tree, err := NewTree(option)
