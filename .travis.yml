@@ -1,0 +1,41 @@
+language: go
+
+go:
+  - "1.11.x"
+
+os:
+  - linux
+
+env:
+  - DEP_VERSION="0.5.0" APP_ENV="travis"
+
+before_install:
+  # Download the binary to bin folder in $GOPATH
+  - curl -L -s https://github.com/golang/dep/releases/download/v${DEP_VERSION}/dep-linux-amd64 -o $GOPATH/bin/dep
+  # Make the binary executable
+  - chmod +x $GOPATH/bin/dep
+  - go get -u golang.org/x/tools/cmd/goimports
+  - go get -u github.com/kisielk/errcheck
+  - go get -u golang.org/x/lint/golint
+  - go get -u github.com/client9/misspell/cmd/misspell
+
+install:
+  - make bundle
+
+cache:
+  directories: vendor
+
+script:
+  - make fmtcheck
+  - make importcheck
+  - make errcheck
+  - make lint
+  - make vet
+  - make misspell
+  - make test
+
+branches:
+  only:
+    - master
+    - develop
+

@@ -14,8 +14,7 @@ tree: ${SOURCE_FILES} main.go
 bundle:
 	dep ensure
 
-checkall: 
-	fmtcheck importcheck lint vet errcheck misspell
+checkall: lint vet errcheck misspell
 
 fmt:
 	find . -type f -name '*.go' -not -path "./vendor/*" -print0 | xargs -0 gofmt -w
