@@ -74,6 +74,28 @@ func TestIsValidInput(t *testing.T) {
 
 3 directories, 1 file
 `
+	outputdironly := testdataDirCase1
+	outputdironly += `
+└── dir1
+    ├── dir11
+    └── dir12
+
+3 directories
+`
+
+	outputgopher := testdataDirCase1
+	outputgopher += `
+├── ʕ◔ϖ◔ʔ
+│   ├── ʕ◔ϖ◔ʔ
+│   │   ├── ʕ◔ϖ◔ʔ
+│   │   └── ʕ◔ϖ◔ʔ
+│   └── ʕ◔ϖ◔ʔ
+│       ├── ʕ◔ϖ◔ʔ
+│       └── ʕ◔ϖ◔ʔ
+└── ʕ◔ϖ◔ʔ
+
+3 directories, 5 files
+`
 
 	//ディレクトリ読み込みエラー検証用にパーミッション操作
 	if err := os.Chmod(testdataDirCase2Unreadable, 0000); err != nil {
@@ -86,12 +108,14 @@ func TestIsValidInput(t *testing.T) {
 	}()
 
 	cases := []struct {
-		name      string
-		dir       string
-		output    string
-		deps      int
-		outStream interface{}
-		assertFn  AssertFn
+		name       string
+		dir        string
+		output     string
+		deps       int
+		dirOnly    bool
+		maskGopher bool
+		outStream  interface{}
+		assertFn   AssertFn
 	}{
 		{
 			name:      "default",
@@ -115,6 +139,22 @@ func TestIsValidInput(t *testing.T) {
 			deps:      2,
 			outStream: new(bytes.Buffer),
 			assertFn:  noError,
+		},
+		{
+			name:      "dirOnly",
+			dir:       testdataDirCase1,
+			output:    outputdironly,
+			dirOnly:   true,
+			outStream: new(bytes.Buffer),
+			assertFn:  noError,
+		},
+		{
+			name:       "maskGopher",
+			dir:        testdataDirCase1,
+			output:     outputgopher,
+			maskGopher: true,
+			outStream:  new(bytes.Buffer),
+			assertFn:   noError,
 		},
 		{
 			name:      "deps error",
@@ -146,7 +186,13 @@ func TestIsValidInput(t *testing.T) {
 	for _, v := range cases {
 		t.Run(v.name, func(t *testing.T) {
 
-			tree, err := NewTree(v.deps)
+			option := Option{
+				Deps:       v.deps,
+				DirOnly:    v.dirOnly,
+				MaskGopher: v.maskGopher,
+			}
+
+			tree, err := NewTree(option)
 			if err != nil {
 				v.assertFn(v.name, err)
 				return
