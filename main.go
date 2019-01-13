@@ -11,7 +11,8 @@ import (
 func main() {
 
 	var (
-		deps = flag.Int("L", 0, "階層の深さ")
+		deps    = flag.Int("L", 0, "階層の深さ")
+		dirOnly = flag.Bool("D", false, "ディレクトリのみ表示")
 	)
 
 	flag.Usage = usage
@@ -24,7 +25,11 @@ func main() {
 	}
 
 	dir := args[0]
-	tree, err := tree.NewTree(*deps)
+	option := tree.Option{
+		Deps:    *deps,
+		DirOnly: *dirOnly,
+	}
+	tree, err := tree.NewTree(option)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(2)
@@ -39,10 +44,13 @@ func main() {
 
 func usage() {
 
-	usage := ""
-	usage += "Usage: tree: tree [OPTION] dir_pass\n"
-	usage += "  -L deps\n"
-	usage += "      階層の深さ。0(デフォルト)で無制限 \n"
+	usage := `
+Usage: tree: tree [OPTION] dir_pass
+    -L deps
+        階層の深さ。0(デフォルト)で無制限
+    -D 
+        ディレクトリのみ表示
+`
 	_, err := fmt.Fprintf(os.Stderr, usage)
 	if err != nil {
 		fmt.Println(err)

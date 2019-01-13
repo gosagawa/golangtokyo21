@@ -74,6 +74,14 @@ func TestIsValidInput(t *testing.T) {
 
 3 directories, 1 file
 `
+	outputdironly := testdataDirCase1
+	outputdironly += `
+└── dir1
+    ├── dir11
+    └── dir12
+
+3 directories
+`
 
 	//ディレクトリ読み込みエラー検証用にパーミッション操作
 	if err := os.Chmod(testdataDirCase2Unreadable, 0000); err != nil {
@@ -90,6 +98,7 @@ func TestIsValidInput(t *testing.T) {
 		dir       string
 		output    string
 		deps      int
+		dirOnly   bool
 		outStream interface{}
 		assertFn  AssertFn
 	}{
@@ -113,6 +122,14 @@ func TestIsValidInput(t *testing.T) {
 			dir:       testdataDirCase1,
 			output:    outputdeps2,
 			deps:      2,
+			outStream: new(bytes.Buffer),
+			assertFn:  noError,
+		},
+		{
+			name:      "dirOnly",
+			dir:       testdataDirCase1,
+			output:    outputdironly,
+			dirOnly:   true,
 			outStream: new(bytes.Buffer),
 			assertFn:  noError,
 		},
@@ -146,7 +163,12 @@ func TestIsValidInput(t *testing.T) {
 	for _, v := range cases {
 		t.Run(v.name, func(t *testing.T) {
 
-			tree, err := NewTree(v.deps)
+			option := Option{
+				Deps:    v.deps,
+				DirOnly: v.dirOnly,
+			}
+
+			tree, err := NewTree(option)
 			if err != nil {
 				v.assertFn(v.name, err)
 				return
