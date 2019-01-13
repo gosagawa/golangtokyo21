@@ -3,12 +3,12 @@ SOURCE_FILES=$(shell find . -type d -name vendor -prune -o -type d -path ./cmd -
 GO_LIST=$(shell go list ./... | grep -v /vendor/)
 GOPATH=$(shell echo "$$GOPATH")
 
-all: tree
+all: main
 
 dist: build-cross
 	cd bin/linux/amd64 && tar zcvf realize_sample-linux-amd64-${VERSION}.tar.gz realize_sample-${VERSION}
 
-tree: ${SOURCE_FILES} main.go
+main: ${SOURCE_FILES} main.go
 	go build -o bin/tree main.go
 
 bundle:
