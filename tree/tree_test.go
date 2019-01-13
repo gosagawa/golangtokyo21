@@ -54,6 +54,19 @@ func TestIsValidInput(t *testing.T) {
 │       └── file5
 └── file1
 `
+	outputdeps1 := testdataDirCase1
+	outputdeps1 += `
+├── dir1
+└── file1
+`
+
+	outputdeps2 := testdataDirCase1
+	outputdeps2 += `
+├── dir1
+│   ├── dir11
+│   └── dir12
+└── file1
+`
 
 	if err := os.Chmod(testdataDirCase2, 0700); err != nil {
 		fmt.Println(err)
@@ -63,26 +76,79 @@ func TestIsValidInput(t *testing.T) {
 		name      string
 		dir       string
 		output    string
+		deps      int
 		outStream interface{}
 		assertFn  AssertFn
 	}{
-		{name: "all correct", dir: testdataDirCase1, output: output, outStream: new(bytes.Buffer), assertFn: noError},
-		{name: "dir_not_exist", dir: "dir_not_exist", output: "", outStream: new(bytes.Buffer), assertFn: withError},
-		{name: "output error", dir: testdataDirCase1, output: output, outStream: new(unwritable), assertFn: withError},
-		{name: "directory_permission_error", dir: testdataDirCase2, output: output, outStream: new(unwritable), assertFn: withError},
+		{
+			name:      "default",
+			dir:       testdataDirCase1,
+			output:    output,
+			outStream: new(bytes.Buffer),
+			assertFn:  noError,
+		},
+		{
+			name:      "deps1",
+			dir:       testdataDirCase1,
+			output:    outputdeps1,
+			deps:      1,
+			outStream: new(bytes.Buffer),
+			assertFn:  noError,
+		},
+		{
+			name:      "deps2",
+			dir:       testdataDirCase1,
+			output:    outputdeps2,
+			deps:      2,
+			outStream: new(bytes.Buffer),
+			assertFn:  noError,
+		},
+		{
+			name:      "deps error",
+			dir:       testdataDirCase1,
+			deps:      -1,
+			outStream: new(bytes.Buffer),
+			assertFn:  withError,
+		},
+		{
+			name:      "dir_not_exist",
+			dir:       "dir_not_exist",
+			outStream: new(bytes.Buffer),
+			assertFn:  withError,
+		},
+		{
+			name:      "outstream error",
+			dir:       testdataDirCase1,
+			outStream: new(unwritable),
+			assertFn:  withError,
+		},
+		{
+			name:      "directory_permission_error",
+			dir:       testdataDirCase2,
+			outStream: new(unwritable),
+			assertFn:  withError,
+		},
 	}
 
 	for _, v := range cases {
 		t.Run(v.name, func(t *testing.T) {
-			err := OutputTree(v.dir, v.outStream.(io.Writer))
-			v.assertFn(v.name, err)
+
+			tree, err := NewTree(v.deps)
 			if err != nil {
+				v.assertFn(v.name, err)
+				return
+			}
+
+			err = tree.OutputTree(v.dir, v.outStream.(io.Writer))
+			if err != nil {
+				v.assertFn(v.name, err)
 				return
 			}
 			buffer := v.outStream.(*bytes.Buffer)
 			if buffer.String() != v.output {
 				t.Errorf("%v\nexpected \n%v", buffer.String(), v.output)
 			}
+			v.assertFn(v.name, err)
 		})
 	}
 
