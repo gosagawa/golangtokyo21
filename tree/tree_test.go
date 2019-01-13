@@ -54,6 +54,11 @@ func TestIsValidInput(t *testing.T) {
 │       └── file5
 └── file1
 `
+
+	if err := os.Chmod(testdataDirCase2, 0700); err != nil {
+		fmt.Println(err)
+	}
+
 	cases := []struct {
 		name      string
 		dir       string
@@ -79,5 +84,9 @@ func TestIsValidInput(t *testing.T) {
 				t.Errorf("%v\nexpected \n%v", buffer.String(), v.output)
 			}
 		})
+	}
+
+	if err := os.Chmod(testdataDirCase2, 0755); err != nil {
+		fmt.Println(err)
 	}
 }
