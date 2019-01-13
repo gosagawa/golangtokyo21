@@ -25,7 +25,9 @@ const (
 
 //Tree treeコマンド
 type Tree struct {
-	Deps int //取得する深さ
+	Deps       int //取得する深さ
+	DirAmount  int //ディレクトリ数
+	FileAmount int //ファイル数
 }
 
 //NewTree treeコマンド作成
@@ -50,6 +52,7 @@ func (t *Tree) OutputTree(dir string, out io.Writer) error {
 	if err != nil {
 		return err
 	}
+	result += fmt.Sprintf("\n%v\n", t.getFileCountString())
 
 	_, err = out.Write([]byte(result))
 	if err != nil {
@@ -83,12 +86,17 @@ func (t *Tree) searchDir(dir string, base string, result *string, deps int) erro
 		}
 		*result += fmt.Sprintf("%v%v%v\n", base, relationLineParent, file.Name())
 		if file.IsDir() {
+			t.DirAmount++
+
 			nextDir := fmt.Sprintf("%v/%v", dir, file.Name())
 			nextBase := fmt.Sprintf("%v%v", base, relationLineChild)
+
 			err = t.searchDir(nextDir, nextBase, result, deps)
 			if err != nil {
 				return err
 			}
+		} else {
+			t.FileAmount++
 		}
 	}
 	return nil
@@ -110,4 +118,17 @@ func (t *Tree) isOverDeps(deps int) bool {
 		return false
 	}
 	return true
+}
+
+func (t *Tree) getFileCountString() string {
+
+	dirUnit := "directory"
+	if t.DirAmount > 1 {
+		dirUnit = "directories"
+	}
+	fileUnit := "file"
+	if t.FileAmount > 1 {
+		fileUnit = "files"
+	}
+	return fmt.Sprintf("%v %v, %v %v", t.DirAmount, dirUnit, t.FileAmount, fileUnit)
 }
